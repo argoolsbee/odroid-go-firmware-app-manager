@@ -35,10 +35,13 @@ def save_config_file(config_file_path, config):
 
 def get_config_value(config_file, section, key):
     config = read_config_file(config_file)
+    config_value = None
     if section in config:
-        config_value = config[section][key]
-    else:
-        config_value = None
+        try:
+            config_value = config[section][key]
+        except:
+            config_value = None
+            #print('{0} not found in config'.format(repo))
     return config_value
 
 def set_config_value(config_file, section, key, value):
@@ -112,80 +115,74 @@ def get_app_list():
     
     return app_list_json
 
-def install_firwmare_dependencies(repo, app):
+def install_firwmare_dependencies(app):
     # Repo specific dependencies: create dir structure, move bios files if found in current dir
-    print('Installing dependencies')
-    deps = app['dependencies']
+    if 'dependencies' in app:
+        print('Installing dependencies')
+        deps = app['dependencies']
     
-    for directory in deps['directories']:
-        print('Creating directory: {0}'.format(directory))
-        mkdir_p(directory)
+        if 'directories' in deps:
+            for directory in deps['directories']:
+                #print('Creating directory: {0}'.format(directory))
+                mkdir_p(directory)
         
-    for file in deps['files']:
-        target_filepath = '{0}/{1}'.format(file['target_directory'], file['name'])
-        if file['target_directory'] == ROMART_DIR and os.path.isdir(ROMART_DIR):
-            print('Skipping rom art install, directory found')
-        elif os.path.isfile(target_filepath):
-            print('File found in target directory. Skipping file: {0}'.format(file['target_directory']))
-        elif os.path.isfile(file['name']):
-            print('File found in working directory. Moving to target directory.')
-            mkdir_p(file['target_directory'])
-            shutil.move(file['name'], file['target_directory'])
-        elif 'content' in file:
-            print('Creating file: {0}'.format(target_filepath))
-            mkdir_p(file['target_directory'])
-            with open(target_filepath, 'w') as dep_file:
-                for line in file['content']:
-                     dep_file.write('{0}\n'.format(line))
-        elif 'sources' in file:
-            mkdir_p(file['target_directory'])
-            for idx, source in enumerate(file['sources']):
-                print('Downloading dependency: {0}'.format(file['sources'][idx]))
-                dep_filepath = download_file(source, file['target_directory'])
-                if dep_filepath is not None:
-                    print('File downloaded: {0}'.format(dep_filepath))
-                    # If archive, unpack to target_directory
-                    if any(x in dep_filepath for x in ['.tgz', '.zip']):
-                        print('Unpacking file')
-                        archive = shutil.unpack_archive(dep_filepath)
-                        os.remove(dep_filepath)
-                        if file['target_directory'] == 'romart':
-                            set_config_value(CONFIG_FILE, 'romart', 'version', dep_filepath[-8:])
+        if 'files' in deps:    
+            for file in deps['files']:
+                target_filepath = '{0}/{1}'.format(file['target_directory'], file['name'])
+                # Skip rommart if directory is found
+                if file['target_directory'] == ROMART_DIR and os.path.isdir(ROMART_DIR):
+                    print('Skipping rom art install, directory found')
+                # Move file if found in working directory
+                elif os.path.isfile(file['name']):
+                    print('File found in working directory. Moving to target directory.')
+                    mkdir_p(file['target_directory'])
+                    shutil.move(file['name'], file['target_directory'])
+                # Skip file if found in target directory
+                elif os.path.isfile(target_filepath):
+                    #print('File found in target directory. Skipping file: {0}'.format(file['target_directory']))
                     break
+                # Create file if content found in app list
+                elif 'content' in file:
+                    print('Creating file: {0}'.format(target_filepath))
+                    mkdir_p(file['target_directory'])
+                    with open(target_filepath, 'w') as dep_file:
+                        for line in file['content']:
+                             dep_file.write('{0}\n'.format(line))
+                # Download file if source found in app list
+                elif 'sources' in file:
+                    mkdir_p(file['target_directory'])
+                    for idx, source in enumerate(file['sources']):
+                        #print('Downloading dependency: {0}'.format(file['sources'][idx]))
+                        dep_filepath = download_file(source, file['target_directory'])
+                        if dep_filepath is not None:
+                            #print('File downloaded: {0}'.format(dep_filepath))
+                            # If archive, unpack to target_directory
+                            if any(x in dep_filepath for x in ['.tgz', '.zip']):
+                                print('Unpacking file')
+                                archive = shutil.unpack_archive(dep_filepath)
+                                os.remove(dep_filepath)
+                                if file['target_directory'] == 'romart':
+                                    set_config_value(CONFIG_FILE, 'romart', 'version', dep_filepath[-8:dep_filepath.rfind('.')])
+                            break
+                        else:
+                            if len(file['sources']) == idx + 1:
+                                print('All sources failed to download. Manually download file and put in directory: {0}'.format(file['target_directory']))
+                            else:
+                                print('Download failed. Attempting next source.')
+                # If unsuccessful and file is required, show manual fallback instructions
                 else:
-                    print('Download failed. Attempting next source.')
-        else:
-            print('WARNING: Unable to automatically install dependent file: {0}'.format(file['name']))
-            print('         Put file {0} in directory {1}'.format(file['name'], file['target_directory']))
-    
-    if 'instructions' in deps:
-        print('App instructions: {0}'.format(deps['instructions']))
+                    if file['type'] == 'required':
+                        print('WARNING: Unable to automatically install required dependent file: {0}. App functionality may be affected.'.format(file['name']))
+                        print('         Put file {0} in directory {1}'.format(file['name'], file['target_directory']))
+        
+        if 'instructions' in deps:
+            print('INSTRUCTIONS: {0}'.format(deps['instructions']))
 
-def install_firmware(repo, app, firmware_url, tag_name):
+def install_firmware(repo, app, firmware_url, tag_name, file_name):
     firmware_filepath = download_file(firmware_url, FIRMWARE_DIR)
-    install_firwmare_dependencies(repo, app)
+    install_firwmare_dependencies(app)
     set_config_value(CONFIG_FILE, 'installed_releases', repo, tag_name)
-
-def install_romart(force_install=False):
-    # Check if romart already exists and skip download. Set force_install parameter to True to download regardless.
-    print('=== Rom Art ===')
-    if os.path.isdir(ROMART_DIR) and not force_install:
-        print('Skipping install, rom art directory found')
-    else:
-        shutil.rmtree(ROMART_DIR, True)
-        try:
-            romart_filepath = download_file('http://tree.cafe/romart-20180810.tgz', '')
-        except:
-            romart_filepath = download_file('https://dn.odroid.com/ODROID_GO/romart-20180810.tgz', '')
-        romart_filename, romart_file_extension = os.path.splitext(romart_filepath)
-        try:
-            print('Unpacking rom art')
-            archive = shutil.unpack_archive(romart_filepath)
-            os.remove(romart_filepath)
-            
-            set_config_value(CONFIG_FILE, 'romart', 'version', romart_filename[-8:])
-        except:
-            print('WARNING: unable to unpack rom art archive: {0}'.format(romart_filepath))
+    set_config_value(CONFIG_FILE, 'installed_files', repo, file_name)
 
 def get_firmware_release(repo, release):
     #TODO: bitbucket support (https://bitbucket.org/DavidKnight247/odroid-go-spectrum-emulator, https://bitbucket.org/odroid_go_stuff/arduventure)
@@ -204,13 +201,12 @@ def get_firmware_release(repo, release):
     if github_client_id and github_client_secret:
         url += '?client_id={0}&client_secret={1}'.format(github_client_id, github_client_secret)
     
-    print(url)
     fw_idx = None
     fw_url = None
     tag_name = None
+    file_name = None
     try:
         response = json.loads(urlopen(url).read().decode('utf-8'))
-        
         print('Found release {0}'.format(response['tag_name']))
         
         # Look for a fw file in the release
@@ -220,6 +216,7 @@ def get_firmware_release(repo, release):
                 fw_idx = idx
                 fw_url = response['assets'][fw_idx]['browser_download_url']
                 tag_name = response['tag_name']
+                file_name = response['assets'][fw_idx]['name']
                 #print('Release Notes:')
                 #print(response['body'])
         
@@ -229,23 +226,10 @@ def get_firmware_release(repo, release):
     except:
         print('Release not found')
 
-    return fw_url, tag_name
-
-def get_installed_release(repo):
-    config = read_config_file(CONFIG_FILE)
-    tag_name = None
-    try:
-        tag_name = get_config_value(CONFIG_FILE, 'installed_releases', repo)
-    except:
-        print('{0} not found in config'.format(repo))
-    return tag_name
+    return fw_url, tag_name, file_name
 
 def finalize_sd_card():
     print('=== Post Install Steps ===')
-    #if os.path.exists('{0}/col'.format(DATA_DIR)) and not os.path.isfile('{0}/col/BIOS.col'.format(ROMS_DIR)):
-    #    print('* ColecoVison requires a BIOS.col in {0}/col'.format(ROMS_DIR))
-    #if os.path.exists('{0}/msx/bios'.format(ROMS_DIR)) and not (os.path.isfile('{0}/msx/bios/DISK.ROM'.format(ROMS_DIR)) and os.path.isfile('{0}/msx/bios/MSX2.ROM'.format(ROMS_DIR)) and os.path.isfile('{0}/msx/bios/MSX2EXT.ROM'.format(ROMS_DIR))):
-    #    print('* fMSX-go requires BIOS files MSX2.ROM, MSX2EXT.ROM and DISK.ROM in {0}/msx/bios'.format(ROMS_DIR))
     print('* Hold B on first boot to reinstall your preferred app')
 
 
@@ -255,17 +239,25 @@ app_list = get_app_list()
 
 for idx, (repo, app) in enumerate(app_list, start=1):
     print('=== {1} ==='.format(idx, app['display_name']))
-    firmware_url, release_tag_name = get_firmware_release(repo, app['default_release'])
+    firmware_url, release_tag_name, file_name = get_firmware_release(repo, app['default_release'])
 
     if release_tag_name is not None:
-        installed_tag_name = get_installed_release(repo)
+        installed_tag_name = get_config_value(CONFIG_FILE, 'installed_releases', repo)
         if release_tag_name == installed_tag_name:
             print('Skipping install, requested release matches installed version')
+            install_firwmare_dependencies(app)
         else:
-            #try:
-            install_firmware(repo, app, firmware_url, release_tag_name)
-            #except:
-            #    print('Install failed')
+            try:
+                current_fw_filename = get_config_value(CONFIG_FILE, 'installed_files', repo)
+                current_fw_filepath = '{0}/{1}'.format(FIRMWARE_DIR, current_fw_filename)
+                if os.path.isfile(current_fw_filepath):
+                    os.rename(current_fw_filepath, '{0}.bak'.format(current_fw_filepath))
+                install_firmware(repo, app, firmware_url, release_tag_name, file_name)
+                if os.path.isfile('{0}.bak'.format(current_fw_filepath)):
+                    os.remove('{0}.bak'.format(current_fw_filepath))
+            except:
+                print('Install failed')
+                os.rename('{0}.bak'.format(current_fw_filepath), current_fw_filepath)
     else:
         print('ERROR: app firmware release not found, skipping install')
 
