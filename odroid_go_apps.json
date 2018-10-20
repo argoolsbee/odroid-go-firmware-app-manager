@@ -1,0 +1,188 @@
+{
+    "mad-ady/doom-odroid-go": {
+        "display_name": "Doom (by mad-ady)",
+        "type": "game",
+        "source": "GitHub",
+        "default_release": "latest",
+        "dependencies": {
+            "directories": [
+                "odroid/data/doom"
+            ]
+        }
+    },
+    "OtherCrashOverride/doom-odroid-go": {
+        "display_name": "Doom (by OtherCrashOverride)",
+        "type": "game",
+        "source": "GitHub",
+        "default_release": "latest",
+        "dependencies": {
+            "directories": [
+                "odroid/data/doom"
+            ]
+        }
+    },
+    "OtherCrashOverride/go-play": {
+        "display_name": "Go-Play (NES, GB, GBC, GG, COL)",
+        "type": "emulator",
+        "source": "GitHub",
+        "default_release": "latest",
+        "dependencies": {
+            "directories": [
+                "odroid/data/col",
+                "odroid/data/gb",
+                "odroid/data/gbc",
+                "odroid/data/gg",
+                "odroid/data/nes",
+                "odroid/data/sms",
+                "roms/col",
+                "roms/gb",
+                "roms/gbc",
+                "roms/gg",
+                "roms/nes",
+                "roms/sms"
+            ],
+            "files": [
+                {
+                    "name": "BIOS.col",
+                    "target_directory": "roms/col",
+                    "type": "required"
+                },
+                {
+                    "name": "romart-20180810.tgz",
+                    "target_directory": "romart",
+                    "type": "optional",
+                    "sources": ["http://tree.cafe/romart-20180810.tgz", "https://dn.odroid.com/ODROID_GO/romart-20180810.tgz"]
+                }
+            ],
+            "instructions": "Place rom files in roms/<game system>."
+        }
+    },
+    "OtherCrashOverride/MicroPython_ESP32_psRAM_LoBo-odroid-go": {
+        "display_name": "MicroPython",
+        "type": "other",
+        "source": "GitHub",
+        "default_release": "latest"
+    },
+    "OtherCrashOverride/prosystem-odroid-go": {
+        "display_name": "Atari 7800 (Prosystem)",
+        "type": "emulator",
+        "source": "GitHub",
+        "default_release": "latest",
+        "dependencies": {
+            "directories": [
+                "roms/a78"
+            ],
+            "instructions": "Place rom files in roms/a78."
+        }
+    },
+    "OtherCrashOverride/stella-odroid-go": {
+        "display_name": "Atari 2600 (Stella)",
+        "type": "emulator",
+        "source": "GitHub",
+        "default_release": "latest",
+        "dependencies": {
+            "directories": [
+                "roms/a26"
+            ],
+            "instructions": "Place rom files in roms/a26."
+        }
+    },
+    "Schuemi/fMSX-go": {
+        "display_name": "MSX (fMSX)",
+        "type": "emulator",
+        "source": "GitHub",
+        "default_release": "20181018",
+        "dependencies": {
+            "directories": [
+                "roms/msx/bios"
+                "roms/msx/games"
+                "odroid/data/msx"
+            ],
+            "files": [
+                {
+                    "name": "DISK.ROM",
+                    "target_directory": "roms/msx/bios",
+                    "type": "required"
+                },
+                {
+                    "name": "MSX2.ROM",
+                    "target_directory": "roms/msx/bios",
+                    "type": "required"
+                },
+                {
+                    "name": "MSX2EXT.ROM",
+                    "target_directory": "roms/msx/bios",
+                    "type": "required"
+                },
+                {
+                    "name": "default_keymap.ini",
+                    "target_directory": "odroid/data/msx",
+                    "type": "optional",
+                    "content": [
+                        "[KEYMAPPING]",
+                        "UP = JST_UP",
+                        "RIGHT = JST_RIGHT",
+                        "DOWN = JST_DOWN",
+                        "LEFT = JST_LEFT",
+                        "SELECT = 1",
+                        "START = 2",
+                        "A = JST_FIREA",
+                        "B = JST_FIREB"
+                    ]
+                }
+            ],
+            "instructions": "Place game files in odroid/data/msx/games."
+        }
+    },
+    "Schuemi/c64-go": {
+        "display_name": "Commodore 64",
+        "type": "emulator",
+        "source": "GitHub",
+        "default_release": "20181006",
+        "dependencies": {
+            "directories": [
+                "odroid/data/c64",
+                "roms/c64/bios"
+            ],
+            "files": [
+                {
+                    "name": "1541 ROM",
+                    "target_directory": "roms/c64/bios",
+                    "type": "required"
+                },
+                {
+                    "name": "Basic ROM",
+                    "target_directory": "roms/c64/bios",
+                    "type": "required"
+                },
+                {
+                    "name": "Char ROM",
+                    "target_directory": "roms/c64/bios",
+                    "type": "required"
+                },
+                {
+                    "name": "Kernal ROM",
+                    "target_directory": "roms/c64/bios",
+                    "type": "required"
+                },
+                {
+                    "name": "default_keymap.ini ",
+                    "target_directory": "odroid/data/c64",
+                    "type": "optional",
+                    "content": [
+                        "[KEYMAPPING]",
+                        "UP = JST_UP",
+                        "RIGHT = JST_RIGHT",
+                        "DOWN = JST_DOWN",
+                        "LEFT = JST_LEFT",
+                        "SELECT = KEY_FM",
+                        "START = KEY_R_S",
+                        "A = JST_FIRE",
+                        "B = KEY_SPC"
+                    ]
+                }
+            ],
+            "instructions": "Place game files in roms/c64/. Currently only .d64 files can be loaded"
+        }
+    }
+}
