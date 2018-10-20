@@ -11,7 +11,7 @@ Application firmware manager for OtherCrashOverride/odroid-go-firmware
 * Python 3+ (tested with 3.7)
 * SD card with a FAT32 filesystem and at least 512MB of free space
 * Install OtherCrashOverride/odroid-go-firmware to your ODroid Go ([Device firmware instructions](https://wiki.odroid.com/odroid_go/firmware_update))
-  * Release [20180727](https://github.com/OtherCrashOverride/odroid-go-firmware/releases/tag/20180727) is currently recommended (as of 23-Aug-2018)
+  * Tested up to release [20181001](https://github.com/OtherCrashOverride/odroid-go-firmware/releases/tag/20181001)
 * ODroid Go application firmware GitHub repositories must release their app as a compatibile .fw file.
 * BIOS files
   * ColecoVision: BIOS.col
