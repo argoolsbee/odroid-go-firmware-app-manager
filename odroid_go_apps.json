@@ -94,8 +94,8 @@
         "default_release": "20181018",
         "dependencies": {
             "directories": [
-                "roms/msx/bios"
-                "roms/msx/games"
+                "roms/msx/bios",
+                "roms/msx/games",
                 "odroid/data/msx"
             ],
             "files": [
