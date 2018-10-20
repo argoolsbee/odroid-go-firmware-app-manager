@@ -16,7 +16,7 @@ Application firmware manager for OtherCrashOverride/odroid-go-firmware
 * BIOS files
   * ColecoVision: BIOS.col
   * Commodore 64: 1541 ROM, Basic ROM, Char ROM, Kernal ROM
-  * MSX : DISK.ROM, MSX2.ROM, MSX2EXT.ROM
+  * MSX: DISK.ROM, MSX2.ROM, MSX2EXT.ROM
 
 # Instructions
 1. Move odroid\_go\_app_manager.py to the root directory of your SD card
