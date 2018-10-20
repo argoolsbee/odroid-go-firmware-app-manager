@@ -20,10 +20,9 @@ Application firmware manager for OtherCrashOverride/odroid-go-firmware
 
 # Instructions
 1. Move odroid\_go\_app_manager.py to the root directory of your SD card
-2. Optional: By default, all currently supported apps will be installed. Modify odroid\_go_apps.json to include or exclude apps.
-3. Optional: Some emulators require BIOS files. If BIOS files are not already in the appropriate directories, put the BIOS files in the root directory of your SD card.
-4. Open a command line or terminal, change the working directory to your SD card
-5. Run python odroid_go_app_manager.py
+2. Optional: Some emulators require BIOS files. If BIOS files are not already in the appropriate directories, put the BIOS files in the root directory of your SD card.
+3. Open a command line or terminal, change the working directory to your SD card
+4. Run python odroid_go_app_manager.py
 
 # Supported app firmware repositories
 * mad-ady/doom-odroid-go
