@@ -1,4 +1,16 @@
 {
+    "DavidKnight247/odroid-go-spectrum-emulator": {
+        "display_name": "ZX Spectrum",
+        "type": "game",
+        "source": "Bitbucket",
+        "default_release": "latest",
+        "dependencies": {
+            "directories": [
+                "roms/spectrum"
+            ],
+            "instructions": "Place rom files in roms/spectrum. Subdirectories are supported."
+        }
+    },
     "mad-ady/doom-odroid-go": {
         "display_name": "Doom (by mad-ady)",
         "type": "game",
@@ -9,6 +21,13 @@
                 "odroid/data/doom"
             ]
         }
+    },
+    "odroid_go_stuff/arduventure": {
+        "display_name": "Arduventure",
+        "type": "game",
+        "source": "Bitbucket",
+        "default_release": "static",
+        "static_file": "Arduventure.fw"
     },
     "OtherCrashOverride/doom-odroid-go": {
         "display_name": "Doom (by OtherCrashOverride)",
