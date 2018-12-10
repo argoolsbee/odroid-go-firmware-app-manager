@@ -162,7 +162,8 @@ def install_firwmare_dependencies(app):
                                 archive = shutil.unpack_archive(dep_filepath)
                                 os.remove(dep_filepath)
                                 if file['target_directory'] == 'romart':
-                                    set_config_value(CONFIG_FILE, 'romart', 'version', dep_filepath[-8:dep_filepath.rfind('.')])
+                                    filename_end_idx = dep_filepath.rfind('.')
+                                    set_config_value(CONFIG_FILE, 'romart', 'version', dep_filepath[filename_end_idx - 8:filename_end_idx])
                             break
                         else:
                             if len(file['sources']) == idx + 1:
