@@ -8,7 +8,7 @@ from sys import stdout
 import time
 from urllib.request import urlretrieve, urlopen
 
-APP_MGR_VERSION = '20181210'
+APP_MGR_VERSION = '20181222'
 APP_LIST = 'odroid_go_apps.json'
 CONFIG_FILE = 'odroid_go_app_manager.cfg'
 FIRMWARE_DIR = 'odroid/firmware'
