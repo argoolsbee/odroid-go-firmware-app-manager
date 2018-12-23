@@ -2,12 +2,13 @@ import configparser
 from datetime import datetime
 import json
 import os
+import re
 import shutil
 from sys import stdout
 import time
 from urllib.request import urlretrieve, urlopen
 
-APP_MGR_VERSION = '20181020'
+APP_MGR_VERSION = '20181222'
 APP_LIST = 'odroid_go_apps.json'
 CONFIG_FILE = 'odroid_go_app_manager.cfg'
 FIRMWARE_DIR = 'odroid/firmware'
@@ -185,47 +186,99 @@ def install_firmware(repo, app, firmware_url, tag_name, file_name):
     set_config_value(CONFIG_FILE, 'installed_releases', repo, tag_name)
     set_config_value(CONFIG_FILE, 'installed_files', repo, file_name)
 
-def get_firmware_release(repo, release):
-    #TODO: bitbucket support (https://bitbucket.org/DavidKnight247/odroid-go-spectrum-emulator, https://bitbucket.org/odroid_go_stuff/arduventure)
+def get_firmware_release(app, repo):
+    source = app['source']
+    requested_release = app['default_release']
     
-    url = 'https://api.github.com/repos/{0}/releases/'.format(repo)
-    if release == 'latest':
-        print('Getting latest release')
-        url += 'latest'
-    else:
-        print('Getting release {0}'.format(release))
-        url += 'tags/{0}'.format(release)
-    
-    github_client_id = get_config_value(CONFIG_FILE, 'github_auth', 'client_id')
-    github_client_secret = get_config_value(CONFIG_FILE, 'github_auth', 'client_secret')
-    
-    if github_client_id and github_client_secret:
-        url += '?client_id={0}&client_secret={1}'.format(github_client_id, github_client_secret)
-    
-    fw_idx = None
-    fw_url = None
-    tag_name = None
-    file_name = None
-    try:
-        response = json.loads(urlopen(url).read().decode('utf-8'))
-        print('Found release {0}'.format(response['tag_name']))
+    # Build GitHub API url
+    if source == 'GitHub':
+        url = 'https://api.github.com/repos/{0}/releases/'.format(repo)
+        if requested_release == 'latest':
+            print('Getting latest release')
+            url += 'latest'
+        else:
+            print('Getting release {0}'.format(requested_release))
+            url += 'tags/{0}'.format(requested_release)
         
-        # Look for a fw file in the release
-        # TODO: this assumes there is only 1, returns the last found
-        for idx, asset in enumerate(response['assets']):
-            if asset['browser_download_url'].endswith('.fw'):
-                fw_idx = idx
-                fw_url = response['assets'][fw_idx]['browser_download_url']
-                tag_name = response['tag_name']
-                file_name = response['assets'][fw_idx]['name']
-                #print('Release Notes:')
-                #print(response['body'])
+        github_client_id = get_config_value(CONFIG_FILE, 'github_auth', 'client_id')
+        github_client_secret = get_config_value(CONFIG_FILE, 'github_auth', 'client_secret')
         
-        if fw_idx is None:
-            print('Firmware file not found in release')
-            #TODO: get next latest release?
-    except:
-        print('Release not found')
+        if github_client_id and github_client_secret:
+            url += '?client_id={0}&client_secret={1}'.format(github_client_id, github_client_secret)
+        
+        fw_idx = None
+        fw_url = None
+        tag_name = None
+        file_name = None
+        try:
+            response = json.loads(urlopen(url).read().decode('utf-8'))
+            print('Found release {0}'.format(response['tag_name']))
+            
+            # Look for a fw file in the release
+            # TODO: this assumes there is only 1, returns the last found
+            for idx, asset in enumerate(response['assets']):
+                if asset['browser_download_url'].endswith('.fw'):
+                    fw_idx = idx
+                    fw_url = response['assets'][fw_idx]['browser_download_url']
+                    tag_name = response['tag_name']
+                    file_name = response['assets'][fw_idx]['name']
+                    #print('Release Notes:')
+                    #print(response['body'])
+            
+            if fw_idx is None:
+                print('Firmware file not found in release')
+                #TODO: get next latest release?
+        except:
+            print('Release not found')
+            
+    # Build Bitbucket API url
+    if source == 'Bitbucket':
+        base_url = 'https://api.bitbucket.org/2.0/repositories'
+        
+        if requested_release == 'static':
+            file_name = app['static_file']
+            print('Getting static file')
+            url = '{0}/{1}/src?q=path="{2}"'.format(base_url, repo, file_name)
+            response = json.loads(urlopen(url).read().decode('utf-8'))
+            fw_url = response['values'][0]['links']['self']['href']
+            tag_name = response['values'][0]['commit']['hash']
+            file_name = response['values'][0]['path']
+            print('Found release {0}'.format(tag_name))
+        else:
+            print('Getting downloads')
+            url = '{0}/{1}/downloads'.format(base_url, repo)
+            try:
+                response = json.loads(urlopen(url).read().decode('utf-8'))
+                response_size = response['size']
+                print('Found {0} files'.format(response_size))
+                
+                if response_size > 0:
+                    if requested_release == 'latest':
+                        print('Getting latest release')
+                        releases = {}
+                        for idx, download in enumerate(response['values']):
+                            file_name = download['name']
+                            # Search for release date in name
+                            release = re.search('20\d{6}(?=.*fw$)', file_name, re.I)
+                            if release:
+                                releases[idx] = (release.group(), file_name)
+                                
+                            sorted_releases = sorted(releases, key=releases.get, reverse=True)
+                            latest_idx = sorted_releases[0]
+                            fw_url = '{0}/{1}/downloads/{2}'.format(base_url, repo, file_name)
+                            tag_name = releases[latest_idx][0]
+                    else:
+                        print('Getting release {0}'.format(requested_release))
+                        for download in response['values']:
+                            file_name = download['name']
+                            # Search for release date in name
+                            release = re.search('20\d{6}(?=.*fw$)', file_name, re.I)
+                            if release and release.group() == requested_release:
+                                fw_url = '{0}/{1}/downloads/{2}'.format(base_url, repo, file_name)
+                                tag_name = release.group()
+                    print('Found release {0}'.format(tag_name))
+            except:
+                print('Release not found')
 
     return fw_url, tag_name, file_name
 
@@ -240,7 +293,7 @@ app_list = get_app_list()
 
 for idx, (repo, app) in enumerate(app_list, start=1):
     print('=== {1} ==='.format(idx, app['display_name']))
-    firmware_url, release_tag_name, file_name = get_firmware_release(repo, app['default_release'])
+    firmware_url, release_tag_name, file_name = get_firmware_release(app, repo)
 
     if release_tag_name is not None:
         installed_tag_name = get_config_value(CONFIG_FILE, 'installed_releases', repo)
@@ -251,13 +304,17 @@ for idx, (repo, app) in enumerate(app_list, start=1):
             try:
                 current_fw_filename = get_config_value(CONFIG_FILE, 'installed_files', repo)
                 current_fw_filepath = '{0}/{1}'.format(FIRMWARE_DIR, current_fw_filename)
+                # Rename current file to keep as backup
                 if os.path.isfile(current_fw_filepath):
                     os.rename(current_fw_filepath, '{0}.bak'.format(current_fw_filepath))
+                # Download and install dependencies for firmware
                 install_firmware(repo, app, firmware_url, release_tag_name, file_name)
+                # Once install is complete, delete backup
                 if os.path.isfile('{0}.bak'.format(current_fw_filepath)):
                     os.remove('{0}.bak'.format(current_fw_filepath))
             except:
                 print('Install failed')
+                # Restore the previously backed up file
                 os.rename('{0}.bak'.format(current_fw_filepath), current_fw_filepath)
     else:
         print('ERROR: app firmware release not found, skipping install')

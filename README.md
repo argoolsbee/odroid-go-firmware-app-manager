@@ -25,14 +25,18 @@ Application firmware manager for OtherCrashOverride/odroid-go-firmware
 4. Run python odroid_go_app_manager.py
 
 # Supported app firmware repositories
-* mad-ady/doom-odroid-go
-* OtherCrashOverride/doom-odroid-go
-* OtherCrashOverride/go-play
-* OtherCrashOverride/MicroPython_ESP32_psRAM_LoBo-odroid-go
-* OtherCrashOverride/prosystem-odroid-go
-* OtherCrashOverride/stella-odroid-go
-* Schuemi/c64-go
-* Schuemi/fMSX-go
+* GitHub
+  * mad-ady/doom-odroid-go
+  * OtherCrashOverride/doom-odroid-go
+  * OtherCrashOverride/go-play
+  * OtherCrashOverride/MicroPython_ESP32_psRAM_LoBo-odroid-go
+  * OtherCrashOverride/prosystem-odroid-go
+  * OtherCrashOverride/stella-odroid-go
+  * Schuemi/c64-go
+  * Schuemi/fMSX-go
+* Bitbucket
+  * DavidKnight247/odroid-go-spectrum-emulator
+  * odroid_go_stuff/arduventure
 
 # Disclamer
 * I have no association with Hardkernel, ODroid, or referenced repositories
